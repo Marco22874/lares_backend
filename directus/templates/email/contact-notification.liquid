@@ -1,0 +1,64 @@
+<!--
+  @file contact-notification.liquid
+  @author Lares Cohousing Dev Team
+  @date 2026-02-11
+  @description Email template for new contact form
+               submissions. Sent to admin when a
+               visitor submits the contact form.
+  @update 2026-02-11
+-->
+
+<html>
+<body style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #2d5016;">
+    New Contact Form Submission
+  </h2>
+
+  <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold; width: 120px;">
+        Name
+      </td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+        {{ name }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">
+        Email
+      </td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+        {{ email }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">
+        Phone
+      </td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+        {{ phone }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #eee; font-weight: bold;">
+        Subject
+      </td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">
+        {{ subject }}
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 8px; font-weight: bold; vertical-align: top;">
+        Message
+      </td>
+      <td style="padding: 8px; white-space: pre-wrap;">
+        {{ message }}
+      </td>
+    </tr>
+  </table>
+
+  <p style="color: #888; font-size: 12px;">
+    This is an automated notification from Lares Cohousing.
+  </p>
+</body>
+</html>

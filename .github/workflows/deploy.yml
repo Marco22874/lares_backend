@@ -1,0 +1,81 @@
+# Backend Deploy Pipeline - Lares Cohousing
+# Builds Docker image and deploys to OCI Cloud
+# on push to main branch.
+#
+# Author: Lares Cohousing Dev Team
+# Date: 2026-02-11
+#
+# Required secrets:
+#   OCI_SSH_KEY - SSH private key for OCI instance
+#   OCI_HOST - OCI instance hostname/IP
+#   OCI_USER - SSH username
+#   DOCKER_REGISTRY - Container registry URL
+#   DOCKER_USERNAME - Registry username
+#   DOCKER_PASSWORD - Registry password
+
+name: Backend Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run test
+
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    needs: test
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -f docker/Dockerfile \
+            -t ${{ secrets.DOCKER_REGISTRY }}/lares-backend:latest \
+            -t ${{ secrets.DOCKER_REGISTRY }}/lares-backend:${{ github.sha }} \
+            .
+
+      - name: Login to registry
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | \
+          docker login ${{ secrets.DOCKER_REGISTRY }} \
+            -u ${{ secrets.DOCKER_USERNAME }} \
+            --password-stdin
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_REGISTRY }}/lares-backend:latest
+          docker push ${{ secrets.DOCKER_REGISTRY }}/lares-backend:${{ github.sha }}
+
+      - name: Deploy to OCI
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.OCI_HOST }}
+          username: ${{ secrets.OCI_USER }}
+          key: ${{ secrets.OCI_SSH_KEY }}
+          script: |
+            cd /opt/lares-backend
+            docker compose pull directus
+            docker compose up -d directus
+            sleep 10
+            docker exec lares-directus \
+              npx directus schema apply \
+              /directus/snapshots/snapshot.yaml \
+              --yes || true
+            echo "Deploy completed at $(date)"

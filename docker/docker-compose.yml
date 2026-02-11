@@ -1,0 +1,130 @@
+# Docker Compose - Lares Cohousing Backend
+# Directus CMS + PostgreSQL
+#
+# Author: Lares Cohousing Dev Team
+# Date: 2026-02-11
+#
+# Usage:
+#   docker compose up -d
+#   docker compose down
+
+services:
+  database:
+    image: postgres:16-alpine
+    container_name: lares-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-directus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+      POSTGRES_DB: ${DB_DATABASE:-lares}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-directus}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lares-network
+
+  cache:
+    image: redis:7-alpine
+    container_name: lares-cache
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lares-network
+
+  directus:
+    image: directus/directus:11
+    container_name: lares-directus
+    restart: unless-stopped
+    depends_on:
+      database:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+    ports:
+      - "${DIRECTUS_PORT:-8055}:8055"
+    environment:
+      # Database
+      DB_CLIENT: pg
+      DB_HOST: database
+      DB_PORT: 5432
+      DB_DATABASE: ${DB_DATABASE:-lares}
+      DB_USER: ${DB_USER:-directus}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD required}
+
+      # Security
+      SECRET: ${DIRECTUS_SECRET:?DIRECTUS_SECRET required}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?ADMIN_EMAIL required}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD required}
+
+      # Cache
+      CACHE_ENABLED: "true"
+      CACHE_STORE: redis
+      CACHE_REDIS: redis://cache:6379
+      CACHE_AUTO_PURGE: "true"
+
+      # Rate Limiting
+      RATE_LIMITER_ENABLED: "true"
+      RATE_LIMITER_STORE: redis
+      RATE_LIMITER_REDIS: redis://cache:6379
+      RATE_LIMITER_POINTS: "25"
+      RATE_LIMITER_DURATION: "1"
+
+      # CORS
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4321}
+      CORS_METHODS: GET,POST,PATCH,DELETE
+      CORS_ALLOWED_HEADERS: Content-Type,Authorization
+      CORS_CREDENTIALS: "true"
+
+      # Authentication
+      AUTH_PROVIDERS: ""
+      ACCESS_TOKEN_TTL: 15m
+      REFRESH_TOKEN_TTL: 7d
+      REFRESH_TOKEN_COOKIE_SECURE: "true"
+      REFRESH_TOKEN_COOKIE_SAME_SITE: strict
+      PASSWORD_RESET_URL_ALLOW_LIST: ${FRONTEND_URL:-http://localhost:4321}
+
+      # File Storage
+      STORAGE_LOCATIONS: local
+      STORAGE_LOCAL_ROOT: /directus/uploads
+
+      # Branding
+      PROJECT_NAME: "Lares Cohousing"
+      PROJECT_COLOR: ${PROJECT_COLOR:-#2d5016}
+      PROJECT_LOGO: ${PROJECT_LOGO:-}
+      PROJECT_BACKGROUND: ${PROJECT_BACKGROUND:-}
+
+      # Telemetry
+      TELEMETRY: "false"
+
+      # Logging
+      LOG_LEVEL: info
+      LOG_STYLE: pretty
+
+      # Public URL
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:8055}
+
+    volumes:
+      - ./uploads:/directus/uploads
+      - ../directus/extensions:/directus/extensions
+      - ../directus/snapshots:/directus/snapshots
+    networks:
+      - lares-network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  lares-network:
+    driver: bridge
