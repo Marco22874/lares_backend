@@ -1,6 +1,6 @@
 /**
  * @file vitest.config.js
- * @author Lares Cohousing Dev Team
+ * @author Marco De Luca
  * @date 2026-02-11
  * @description Vitest configuration for backend
  *              unit and integration tests.

@@ -1,6 +1,6 @@
 /**
  * @file contact-validation.test.js
- * @author Lares Cohousing Dev Team
+ * @author Marco De Luca
  * @date 2026-02-11
  * @description Unit tests for contact form server-side
  *              validation. Tests whitelist patterns,

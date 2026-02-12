@@ -1,6 +1,6 @@
 /**
  * @file seed.js
- * @author Lares Cohousing Dev Team
+ * @author Marco De Luca
  * @date 2026-02-11
  * @description Seeds initial data into Directus:
  *              languages, roles (Content Manager),

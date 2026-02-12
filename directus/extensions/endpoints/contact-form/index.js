@@ -1,6 +1,6 @@
 /**
  * @file index.js
- * @author Lares Cohousing Dev Team
+ * @author Marco De Luca
  * @date 2026-02-11
  * @description Custom Directus endpoint for contact
  *              form submissions. Implements server-side
