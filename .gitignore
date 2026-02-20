@@ -6,6 +6,7 @@ node_modules/
 .env.local
 .env.production
 .env.staging
+docker/.env
 
 # Uploads (managed in production only)
 docker/uploads/
